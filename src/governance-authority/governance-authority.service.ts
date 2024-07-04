@@ -1,4 +1,4 @@
-// src/governance-authority/governance-authority.service.ts
+
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGovernanceAuthorityDto } from './dto/create-governance-authority.dto';

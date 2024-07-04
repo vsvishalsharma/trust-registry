@@ -2,7 +2,7 @@
 CREATE TYPE "OrganizationType" AS ENUM ('ISSUER', 'VERIFIER', 'OTHER_TYPE');
 
 -- CreateEnum
-CREATE TYPE "CredentialType" AS ENUM ('ANONCREDS', 'W3C');
+CREATE TYPE "SchemaType" AS ENUM ('W3C', 'ANONCREDS');
 
 -- CreateTable
 CREATE TABLE "GovernanceAuthority" (
@@ -20,6 +20,8 @@ CREATE TABLE "Organization" (
     "did" TEXT NOT NULL,
     "type" "OrganizationType" NOT NULL,
     "governanceAuthorityId" TEXT NOT NULL,
+    "namespaceId" TEXT NOT NULL,
+    "assuranceLevelId" TEXT NOT NULL,
     "onboardedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
@@ -29,30 +31,12 @@ CREATE TABLE "Organization" (
 CREATE TABLE "Schema" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "definition" JSONB NOT NULL,
+    "type" "SchemaType" NOT NULL,
+    "w3cUri" TEXT,
+    "anonCredsDefinitionId" TEXT,
     "organizationId" TEXT NOT NULL,
 
     CONSTRAINT "Schema_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Credential" (
-    "id" TEXT NOT NULL,
-    "type" "CredentialType" NOT NULL,
-    "schemaId" TEXT NOT NULL,
-    "definitionId" TEXT NOT NULL,
-    "revocationRegistryId" TEXT,
-
-    CONSTRAINT "Credential_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "CredentialDefinition" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "definition" JSONB NOT NULL,
-
-    CONSTRAINT "CredentialDefinition_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -106,16 +90,13 @@ CREATE UNIQUE INDEX "Namespace_name_key" ON "Namespace"("name");
 ALTER TABLE "Organization" ADD CONSTRAINT "Organization_governanceAuthorityId_fkey" FOREIGN KEY ("governanceAuthorityId") REFERENCES "GovernanceAuthority"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Organization" ADD CONSTRAINT "Organization_namespaceId_fkey" FOREIGN KEY ("namespaceId") REFERENCES "Namespace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Organization" ADD CONSTRAINT "Organization_assuranceLevelId_fkey" FOREIGN KEY ("assuranceLevelId") REFERENCES "AssuranceLevel"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Schema" ADD CONSTRAINT "Schema_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Credential" ADD CONSTRAINT "Credential_schemaId_fkey" FOREIGN KEY ("schemaId") REFERENCES "Schema"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Credential" ADD CONSTRAINT "Credential_definitionId_fkey" FOREIGN KEY ("definitionId") REFERENCES "CredentialDefinition"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Credential" ADD CONSTRAINT "Credential_revocationRegistryId_fkey" FOREIGN KEY ("revocationRegistryId") REFERENCES "RevocationRegistry"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Namespace" ADD CONSTRAINT "Namespace_governanceAuthorityId_fkey" FOREIGN KEY ("governanceAuthorityId") REFERENCES "GovernanceAuthority"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
