@@ -23,6 +23,7 @@ CREATE TABLE "Organization" (
     "namespaceId" TEXT NOT NULL,
     "assuranceLevelId" TEXT NOT NULL,
     "onboardedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "attributes" JSONB,
 
     CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
 );
@@ -33,19 +34,11 @@ CREATE TABLE "Schema" (
     "name" TEXT NOT NULL,
     "type" "SchemaType" NOT NULL,
     "w3cUri" TEXT,
-    "anonCredsDefinitionId" TEXT,
-    "organizationId" TEXT NOT NULL,
+    "anonCredsSchemaId" TEXT,
+    "organizationId" TEXT,
+    "governanceAuthorityId" TEXT NOT NULL,
 
     CONSTRAINT "Schema_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "RevocationRegistry" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "definition" JSONB NOT NULL,
-
-    CONSTRAINT "RevocationRegistry_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -96,7 +89,10 @@ ALTER TABLE "Organization" ADD CONSTRAINT "Organization_namespaceId_fkey" FOREIG
 ALTER TABLE "Organization" ADD CONSTRAINT "Organization_assuranceLevelId_fkey" FOREIGN KEY ("assuranceLevelId") REFERENCES "AssuranceLevel"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Schema" ADD CONSTRAINT "Schema_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Schema" ADD CONSTRAINT "Schema_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Schema" ADD CONSTRAINT "Schema_governanceAuthorityId_fkey" FOREIGN KEY ("governanceAuthorityId") REFERENCES "GovernanceAuthority"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Namespace" ADD CONSTRAINT "Namespace_governanceAuthorityId_fkey" FOREIGN KEY ("governanceAuthorityId") REFERENCES "GovernanceAuthority"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
