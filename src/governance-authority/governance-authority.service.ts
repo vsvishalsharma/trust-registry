@@ -1,5 +1,5 @@
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException,BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGovernanceAuthorityDto } from './dto/create-governance-authority.dto';
 import { OnboardIssuerDto } from './dto/onboard-issuer.dto';
@@ -11,6 +11,57 @@ import { CreateSchemaDto } from './dto/create-schema.dto';
 @Injectable()
 export class GovernanceAuthorityService {
   constructor(private prisma: PrismaService) {}
+
+  async resolveSchemaAttributes(w3cUri: string): Promise<string[]> {
+    try {
+      const response = await fetch(w3cUri);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const jsonSchema = await response.json();
+      
+      if (!jsonSchema.properties || typeof jsonSchema.properties !== 'object') {
+        throw new BadRequestException('Invalid JSON schema: missing or invalid properties');
+      }
+
+      return Object.keys(jsonSchema.properties);
+    } catch (error) {
+      throw new BadRequestException(`Failed to resolve W3C schema: ${error.message}`);
+    }
+  }
+
+  async validateVerifierAttributes(schemaIds: string[], attributes: string[]): Promise<void> {
+    let allSchemaAttributes: string[] = [];
+
+    for (const schemaId of schemaIds) {
+      const schema = await this.prisma.schema.findUnique({
+        where: { id: schemaId },
+      });
+
+      if (!schema) {
+        throw new NotFoundException(`Schema with ID ${schemaId} not found`);
+      }
+
+      if (schema.w3cUri) {
+        const schemaAttributes = await this.resolveSchemaAttributes(schema.w3cUri);
+        allSchemaAttributes = [...allSchemaAttributes, ...schemaAttributes];
+      }
+    }
+
+    // Remove duplicates from allSchemaAttributes
+    allSchemaAttributes = [...new Set(allSchemaAttributes)];
+
+    // Only validate attributes if we have W3C schemas
+    // WIP anoncreds
+    if (allSchemaAttributes.length > 0) {
+      const invalidAttrs = attributes.filter(attr => !allSchemaAttributes.includes(attr));
+
+      if (invalidAttrs.length > 0) {
+        throw new BadRequestException(`Invalid attributes: ${invalidAttrs.join(', ')}`);
+      }
+    }
+  }
+
 
   async createGovernanceAuthority(dto: CreateGovernanceAuthorityDto) {
     return this.prisma.governanceAuthority.create({
@@ -60,20 +111,21 @@ export class GovernanceAuthorityService {
 
 
   async onboardVerifier(dto: OnboardVerifierDto, governanceAuthorityId: string) {
+    if (dto.schemaIds && dto.schemaIds.length > 0) {
+      await this.validateVerifierAttributes(dto.schemaIds, dto.attributes);
+    }
+
     const verifier = await this.prisma.organization.create({
       data: {
         name: dto.name,
-      did: dto.did,
-      type: OrganizationType.VERIFIER,
-      governanceAuthorityId: governanceAuthorityId,
-      namespaceId: dto.namespaceId,
-      assuranceLevelId: dto.assuranceLevelId,
-      attributes: dto.attributes, 
+        did: dto.did,
+        type: OrganizationType.VERIFIER,
+        governanceAuthorityId: governanceAuthorityId,
+        namespaceId: dto.namespaceId,
+        assuranceLevelId: dto.assuranceLevelId,
+        attributes: dto.attributes,
       },
     });
-
-    // We don't need to map schemas to verifiers in the database
-    // as the relationship is tracked through the schemaIds in the DTO
 
     return verifier;
   }
