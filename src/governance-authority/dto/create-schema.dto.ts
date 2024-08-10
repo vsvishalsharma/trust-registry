@@ -1,5 +1,4 @@
-// schema.dto.ts
-import { IsString, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { SchemaType } from '@prisma/client';
 
 export class CreateSchemaDto {
@@ -9,16 +8,15 @@ export class CreateSchemaDto {
   @IsEnum(SchemaType)
   type: SchemaType;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   w3cUri?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   anonCredsSchemaId?: string;
 
-  @IsString()
   @IsOptional()
-  organizationId?: string;
-  
+  @IsUUID()
+  entityId?: string;
 }

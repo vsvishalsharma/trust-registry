@@ -1,4 +1,5 @@
-import { IsString, IsArray, IsOptional } from 'class-validator';
+import { IsString, IsArray } from 'class-validator';
+
 export class OnboardVerifierDto {
   @IsString()
   name: string;
@@ -14,10 +15,9 @@ export class OnboardVerifierDto {
 
   @IsArray()
   @IsString({ each: true })
-  @IsOptional()
-  schemaIds?: string[];
+  schemaIds: string[];
 
   @IsArray()
   @IsString({ each: true })
-  attributes:string[];
+  attributes: string[];
 }

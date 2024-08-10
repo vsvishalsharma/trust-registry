@@ -1,5 +1,4 @@
-// src/governance-authority/governance-authority.controller.ts
-import { Controller, Post, Body ,Get,Param,UseGuards} from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards,BadRequestException,Query } from '@nestjs/common';
 import { GovernanceAuthorityService } from './governance-authority.service';
 import { CreateGovernanceAuthorityDto } from './dto/create-governance-authority.dto';
 import { OnboardIssuerDto } from './dto/onboard-issuer.dto';
@@ -10,6 +9,8 @@ import { CreateAssuranceLevelDto } from './dto/create-assurance-level.dto';
 import { CreateNamespaceDto } from './dto/create-namespace.dto';
 import { CreateSchemaDto } from './dto/create-schema.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { EntityType } from '@prisma/client';
+
 @Controller('registry')
 export class GovernanceAuthorityController {
   constructor(
@@ -86,14 +87,12 @@ export class GovernanceAuthorityController {
     return this.governanceAuthorityService.getAssuranceLevels(registryId);
   }
 
-  @Get(':registryId/issuers')
-  async getIssuers(@Param('registryId') registryId: string) {
-    return this.governanceAuthorityService.getIssuers(registryId);
-  }
-
-  @Get(':registryId/verifiers')
-  async getVerifiers(@Param('registryId') registryId: string) {
-    return this.governanceAuthorityService.getVerifiers(registryId);
+  @Get(':registryId/entities')
+  async getEntities(
+    @Param('registryId') registryId: string,
+    @Query('type') type?: EntityType
+  ) {
+    return this.governanceAuthorityService.getEntities(registryId, type);
   }
 
   @Get('entities/:entityId')
@@ -101,8 +100,17 @@ export class GovernanceAuthorityController {
     return this.governanceAuthorityService.getEntity(entityId);
   }
 
-  @Get('entities/:entityId/authorizations')
-  async getEntityAuthorizations(@Param('entityId') entityId: string) {
-    return this.governanceAuthorityService.getEntityAuthorizations(entityId);
+  @Get('entities/:entityId/authorization')
+  async getEntityAuthorization(@Param('entityId') entityId: string) {
+    return this.governanceAuthorityService.getEntityAuthorization(entityId);
+  }
+  @Get(':serviceEndpoint')
+  async getGovernanceAuthorityDetails(@Param('serviceEndpoint') serviceEndpoint: string) {
+    return this.governanceAuthorityService.getGovernanceAuthorityDetails(serviceEndpoint);
+  }
+
+  @Get('did/:did')
+  async getEntityByDid(@Param('did') did: string) {
+    return this.governanceAuthorityService.getEntityByDid(did);
   }
 }

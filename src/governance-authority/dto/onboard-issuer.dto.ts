@@ -1,26 +1,6 @@
-import { IsString, IsArray, IsEnum, ValidateNested, IsOptional } from 'class-validator';
+import { IsString, IsArray, IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { SchemaType } from '@prisma/client';
-import { IsValidSchema } from '../../common/decorators/schema-validator.decorator';
-
-class NewSchemaDto {
-  @IsString()
-  name: string;
-
-  @IsEnum(SchemaType)
-  type: SchemaType;
-
-  @IsString()
-  @IsOptional()
-  w3cUri?: string;
-
-  @IsString()
-  @IsOptional()
-  anonCredsSchemaId?: string;
-
-  @IsValidSchema()
-  _: any;
-}
+import { CreateSchemaDto } from './create-schema.dto';
 
 export class OnboardIssuerDto {
   @IsString()
@@ -35,14 +15,14 @@ export class OnboardIssuerDto {
   @IsString()
   assuranceLevelId: string;
 
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  @IsOptional()
   existingSchemaIds?: string[];
 
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => NewSchemaDto)
-  @IsOptional()
-  newSchemas?: NewSchemaDto[];
+  @Type(() => CreateSchemaDto)
+  newSchemas?: CreateSchemaDto[];
 }
