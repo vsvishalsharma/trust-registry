@@ -73,21 +73,30 @@ export class GovernanceAuthorityService {
       data: { ...dto, relatedAuthorities: dto.relatedAuthorities || [] },
     });
   }
-
-  private async createOrUpdateSchemas(issuerId: string, governanceAuthorityId: string, existingSchemaIds?: string[], newSchemas?: CreateSchemaDto[]): Promise<void> {
-    if (existingSchemaIds?.length) {
+  private async createOrUpdateSchemas(
+    issuerId: string,
+    governanceAuthorityId: string,
+    existingSchemaIds?: string[],
+    newSchemas?: CreateSchemaDto[]
+  ): Promise<void> {
+    // Update existing schemas with the issuer ID
+    if (existingSchemaIds && existingSchemaIds.length > 0) {
       await this.prisma.schema.updateMany({
         where: { id: { in: existingSchemaIds } },
         data: { entityId: issuerId },
       });
     }
 
-    if (newSchemas?.length) {
+    // Create new schemas for the issuer if provided
+    if (newSchemas && newSchemas.length > 0) {
       await this.prisma.schema.createMany({
         data: newSchemas.map(schema => ({
-          ...schema,
+          name: schema.name,
+          type: schema.type,
+          w3cUri: schema.w3cUri,
+          anonCredsSchemaId: schema.anonCredsSchemaId,
           entityId: issuerId,
-          governanceAuthorityId,
+          governanceAuthorityId: governanceAuthorityId,
         })),
       });
     }
@@ -96,35 +105,50 @@ export class GovernanceAuthorityService {
   async onboardIssuer(dto: OnboardIssuerDto, governanceAuthorityId: string) {
     const issuer = await this.prisma.entity.create({
       data: {
-        ...dto,
+        name: dto.name,
+        did: dto.did,
         type: EntityType.ISSUER,
-        governanceAuthorityId,
+        governanceAuthorityId: governanceAuthorityId,
+        namespaceId: dto.namespaceId,
+        assuranceLevelId: dto.assuranceLevelId,
         authorization: AuthorizationStatus.CURRENT,
       },
       select: this.entitySelectFields(),
     });
 
-    await this.createOrUpdateSchemas(issuer.id, governanceAuthorityId, dto.existingSchemaIds, dto.newSchemas);
+    // Call the common method to handle schemas
+    await this.createOrUpdateSchemas(
+      issuer.id,
+      governanceAuthorityId,
+      dto.existingSchemaIds,
+      dto.newSchemas
+    );
 
     return issuer;
   }
 
   async onboardVerifier(dto: OnboardVerifierDto, governanceAuthorityId: string) {
-    if (dto.schemaIds?.length) {
+    // Validate attributes against provided schemas
+    if (dto.schemaIds && dto.schemaIds.length > 0) {
       await this.validateVerifierAttributes(dto.schemaIds, dto.attributes);
     }
 
-    return this.prisma.entity.create({
+    const verifier = await this.prisma.entity.create({
       data: {
-        ...dto,
+        name: dto.name,
+        did: dto.did,
         type: EntityType.VERIFIER,
-        governanceAuthorityId,
+        governanceAuthorityId: governanceAuthorityId,
+        namespaceId: dto.namespaceId,
+        assuranceLevelId: dto.assuranceLevelId,
+        attributes: dto.attributes,
         authorization: AuthorizationStatus.CURRENT,
       },
       select: this.entitySelectFields(),
     });
-  }
 
+    return verifier;
+  }
   async createNamespace(dto: CreateNamespaceDto, governanceAuthorityId: string) {
     return this.prisma.namespace.create({
       data: { ...dto, governanceAuthorityId },
