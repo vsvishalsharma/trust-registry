@@ -1,4 +1,3 @@
-
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,14 +12,14 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     const governanceAuthority = await this.prisma.governanceAuthority.findUnique({
-      where: { did: loginDto.did },
+      where: { id: loginDto.id },
     });
 
     if (!governanceAuthority) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { did: governanceAuthority.did, sub: governanceAuthority.id };
+    const payload = { id: governanceAuthority.id, sub: governanceAuthority.id };
     return {
       access_token: this.jwtService.sign(payload),
     };

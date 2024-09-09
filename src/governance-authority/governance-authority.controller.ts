@@ -11,7 +11,7 @@ import { CreateSchemaDto } from './dto/create-schema.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { EntityType } from '@prisma/client';
 
-@Controller('registry')
+@Controller('/')
 export class GovernanceAuthorityController {
   constructor(
     private readonly governanceAuthorityService: GovernanceAuthorityService,
@@ -72,45 +72,45 @@ export class GovernanceAuthorityController {
     return this.governanceAuthorityService.createSchema(createSchemaDto, user.id);
   }
 
-  @Get(':governanceAuthorityId/schema')
-  async getSchemasByGovernanceAuthority(@Param('governanceAuthorityId') governanceAuthorityId: string) {
-    return this.governanceAuthorityService.getSchemasByGovernanceAuthority(governanceAuthorityId);
+  @Get(':governanceAuthorityDid/schemas')
+  async getSchemasByGovernanceAuthority(@Param('governanceAuthorityDid') governanceAuthorityDid: string) {
+    return this.governanceAuthorityService.getSchemasByGovernanceAuthority(governanceAuthorityDid);
   }
 
-  @Get(':registryId/namespaces')
-  async getNamespaces(@Param('registryId') registryId: string) {
-    return this.governanceAuthorityService.getNamespaces(registryId);
+  @Get(':registryDid/namespaces')
+  async getNamespaces(@Param('registryDid') registryDid: string) {
+    return this.governanceAuthorityService.getNamespaces(registryDid);
   }
 
-  @Get(':registryId/assurance-levels')
-  async getAssuranceLevels(@Param('registryId') registryId: string) {
-    return this.governanceAuthorityService.getAssuranceLevels(registryId);
+  @Get(':registryDid/assurance-levels')
+  async getAssuranceLevels(@Param('registryDid') registryDid: string) {
+    return this.governanceAuthorityService.getAssuranceLevels(registryDid);
   }
 
-  @Get(':registryId/entities')
+  @Get(':registryDid/entities')
   async getEntities(
-    @Param('registryId') registryId: string,
+    @Param('registryDid') registryDid: string,
     @Query('type') type?: EntityType
   ) {
-    return this.governanceAuthorityService.getEntities(registryId, type);
+    return this.governanceAuthorityService.getEntities(registryDid, type);
   }
 
-  @Get('entities/:entityId')
-  async getEntity(@Param('entityId') entityId: string) {
-    return this.governanceAuthorityService.getEntity(entityId);
+  @Get('entities/:entityDid/authorization')
+  async getEntityAuthorization(@Param('entityDid') entityDid: string) {
+    return this.governanceAuthorityService.getEntityAuthorization(entityDid);
   }
 
-  @Get('entities/:entityId/authorization')
-  async getEntityAuthorization(@Param('entityId') entityId: string) {
-    return this.governanceAuthorityService.getEntityAuthorization(entityId);
-  }
-  @Get(':serviceEndpoint')
+  /*@Get('service-endpoint/:serviceEndpoint')
   async getGovernanceAuthorityDetails(@Param('serviceEndpoint') serviceEndpoint: string) {
     return this.governanceAuthorityService.getGovernanceAuthorityDetails(serviceEndpoint);
-  }
+  }*/
 
-  @Get('did/:did')
-  async getEntityByDid(@Param('did') did: string) {
-    return this.governanceAuthorityService.getEntityByDid(did);
+  @Get('/did/:did')
+  async getEntity(@Param('did') did: string) {
+    return this.governanceAuthorityService.getDetailsByDid(did);
+  }
+  @Get('/registry')
+  async getAllDetails() {
+    return this.governanceAuthorityService.getAllGovernanceDetails();
   }
 }
