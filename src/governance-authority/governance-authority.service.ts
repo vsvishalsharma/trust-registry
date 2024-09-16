@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateGovernanceAuthorityDto } from './dto/create-governance-authority.dto';
 import { OnboardIssuerDto } from './dto/onboard-issuer.dto';
 import { OnboardVerifierDto } from './dto/onboard-verifier.dto';
+import { OnboardRegistryDto } from './dto/onboard-regstry.dto';
 import { AuthorizationStatus, EntityType, Prisma } from '@prisma/client';
 import { CreateAssuranceLevelDto } from './dto/create-assurance-level.dto';
 import { CreateNamespaceDto } from './dto/create-namespace.dto';
@@ -293,14 +294,14 @@ export class GovernanceAuthorityService {
 
     throw new NotFoundException(`No governance authority or entity found with DID: ${did}`);
   }
-  async getEntityAuthorization(entityId: string): Promise<AuthorizationStatus> {
+  async getEntityAuthorization(entitydId: string): Promise<AuthorizationStatus> {
     const entity = await this.prisma.entity.findUnique({
-      where: { id: entityId },
+      where: { did: entitydId },
       select: { authorization: true },
     });
   
     if (!entity) {
-      throw new NotFoundException(`Entity with ID ${entityId} not found`);
+      throw new NotFoundException(`Entity with ID ${entitydId} not found`);
     }
   
     return entity.authorization;
@@ -359,4 +360,26 @@ export class GovernanceAuthorityService {
       },
     });
   }
-}
+ 
+  async onboardRegistry(
+    dto: OnboardRegistryDto,
+    governanceAuthorityId: string
+  ) {
+    const registryEntity = await this.prisma.entity.create({
+        data: {
+          name: dto.name,
+          did: dto.did,
+          type: EntityType.TRUST_REGISTRY,
+          governanceAuthorityId: governanceAuthorityId,
+          namespaceId: dto.namespaceId,
+          assuranceLevelId: dto.assuranceLevelId,
+          authorization: AuthorizationStatus.CURRENT,
+        },
+        select: this.entitySelectFields(),
+      });
+    
+
+    return registryEntity;
+  }
+ 
+}  

@@ -72,7 +72,7 @@ model AssuranceLevel {
 enum EntityType {
   ISSUER
   VERIFIER
-  OTHER_TYPE
+  TRUST_REGISTRY
 }
 
 enum SchemaType {

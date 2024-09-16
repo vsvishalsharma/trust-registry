@@ -10,7 +10,7 @@ import { CreateNamespaceDto } from './dto/create-namespace.dto';
 import { CreateSchemaDto } from './dto/create-schema.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { EntityType } from '@prisma/client';
-
+import { OnboardRegistryDto } from './dto/onboard-regstry.dto';
 @Controller('/')
 export class GovernanceAuthorityController {
   constructor(
@@ -43,6 +43,15 @@ export class GovernanceAuthorityController {
     @CurrentUser() user: { id: string; did: string },
   ) {
     return this.governanceAuthorityService.onboardVerifier(dto, user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('onboard-registry')
+  async onboardRegistry(
+    @Body() dto: OnboardRegistryDto,
+    @CurrentUser() user: { id: string; did: string },
+  ) {
+    return this.governanceAuthorityService.onboardRegistry(dto, user.id);
   }
 
   @UseGuards(JwtAuthGuard)
